@@ -69,12 +69,12 @@ def _mlb_scores(date: str) -> Dict[str, Any]:
         params={"sportID": 1, "date": date},
         timeout = 20,
     )
-    r.raisa_for_status()
+    r.raise_for_status()
     data = r.json()
     vprint("[MLB] raw dates count:", len(data.get("dates", [])))
 
     games: List[Dict[str, Any]] = []
-    for day in day.get("dates", []):
+    for day in data.get("dates", []):
         for g in day.get("games", []):
             games.append({
                 "league": "mlb",
@@ -93,6 +93,13 @@ def _mlb_scores(date: str) -> Dict[str, Any]:
                 "link": f"https://www.mlb.com/gameday/{g.get('gamePk')}" if g.get("gamePk") else None,
             })
     return {"league": "mlb", "date": date, "games": games}
+
+def _nba_scores(date:str) -> Dict[str,Any]:
+    """
+    F
+    :param date:
+    :return:
+    """
 
 def _nhl_scores(date:str) -> Dict[str, Any]:
     """
