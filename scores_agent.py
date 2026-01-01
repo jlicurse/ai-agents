@@ -96,10 +96,35 @@ def _mlb_scores(date: str) -> Dict[str, Any]:
 
 def _nba_scores(date:str) -> Dict[str,Any]:
     """
-    F
+    Fetch NBA schedule/scores for a date from NBA stats API
     :param date:
     :return:
     """
+
+    headers = {"Authorization": os.environ["BALLDONTLIE_API_KEY"]}
+    r = requests.get(
+        "https://api.balldontlie.io/v1/games",
+        params={"dates[]": date, "per_page": 100},
+        headers=headers, timeout = 20
+    )
+    r.raise_for_status()
+    data = r.json()
+
+    games: List[Dict[str, Any]] = []
+    for g in data.get("Date, ["):
+        home = g["home_team"]["full_name"]
+        away = g["away_team"]["full_name"]
+        games.append({
+            "league": "nba",
+            "game_id": g.get("id"),
+            "status": g.get("status"),
+            "start_time_utc": g.get("date"),
+            "home": {"name": home, "score": g.get("home_team_score")},
+            "away": {"name": away, "score": g.get("visitor_team_score")},
+            "venue": None,
+            "link": None
+        })
+    return {"league": "nba", "date": date, "games": games}
 
 def _nhl_scores(date:str) -> Dict[str, Any]:
     """
@@ -153,4 +178,8 @@ def get_scores_impl(league: str, date: Optional[str] = None, team: Optional[str]
     vprint(f"[get_scores_impl] league={league} date={date} team={team}")
 
     if league == "mlb":
-        payload = mlb_scores(date)
+        payload = _mlb_scores(date)
+    if league == "nhl":
+        payload = _nhl_scores(date)
+    if league == "nba":
+        payload = _nba_scores(date)
